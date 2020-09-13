@@ -28,11 +28,11 @@ jobs:
       
     # Build Project
     - name: Build Project
-      run: ocra --no-dep-run run.rb
+      run: mkdir bin && ocra --no-dep-run run.rb --output bin/modparse.exe
       
     # Upload Artifact
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
         name: MCHDL-win32
-        path: D:\a\ModParse\ModParse\dist
+        path: D:\a\ModParse\ModParse\bin
