@@ -35,4 +35,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: ModParse-win32
-        path: D:\a\ModParse\ModParse\bin
+        path: D:\a\ModParse\ModParse\dist
