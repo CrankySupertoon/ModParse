@@ -28,7 +28,7 @@ jobs:
       
     # Build Project
     - name: Build Project
-      run: ocra run.rb
+      run: ocra --no-dep-run run.rb
       
     # Upload Artifact
     - name: Upload Artifact
