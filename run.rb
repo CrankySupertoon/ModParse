@@ -168,7 +168,7 @@ class Solder
         configHash = YAML.load( configFile )
         if ( ! File.zero? configFile )
             configHash.each do | key, value |
-                directory = @outputPath + key + "/" + configHash[key]["gameversion"]
+                directory = @outputPath + key + "/" + configHash[key]["gameversion"] + "/" + configHash[key]["version"]
                 puts directory
                 FileUtils.mkdir_p( directory )
             end
@@ -182,7 +182,7 @@ class Solder
         if ( ! File.zero? configFile )
             configHash.each do | key, value |
                 file = @modsPath + configHash[key]["filename"]
-                destination = @outputPath + key + "/" + configHash[key]["gameversion"]
+                destination = @outputPath + key + "/" + configHash[key]["gameversion"] + "/" + configHash[key]["version"]
 
                 if ( ! File.exist? destination + configHash[key]["filename"] )
                     FileUtils.cp( file, destination )
