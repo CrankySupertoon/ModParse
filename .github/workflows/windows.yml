@@ -24,7 +24,7 @@ jobs:
       
     # Installs PIP Modules
     - name: Install Gem Modules
-      run: gem install orca rubyzip
+      run: gem install ocra rubyzip
       
     # Build Project
     - name: Build Project
