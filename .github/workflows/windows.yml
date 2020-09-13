@@ -22,17 +22,17 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
       
-    # Installs PIP Modules
+    # Installs Gem Modules
     - name: Install Gem Modules
       run: gem install ocra rubyzip
       
     # Build Project
     - name: Build Project
-      run: mkdir bin && ocra --no-dep-run run.rb --output bin/modparse.exe
+      run: mkdir dist && ocra --gemfile Gemfile --no-dep-run run.rb --output dist/modparse.exe
       
     # Upload Artifact
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: MCHDL-win32
+        name: ModParse-win32
         path: D:\a\ModParse\ModParse\bin
