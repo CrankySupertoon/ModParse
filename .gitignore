@@ -1,0 +1,7 @@
+#IDEs
+.idea/
+
+#Project Files
+config/
+mods/
+output/

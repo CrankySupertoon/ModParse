@@ -1,19 +1,12 @@
-=begin
-Written by Irvin.
-Distributed under the terms of the GNU General Public License v2.
-=end
-
 require 'rubygems'
 require 'zip'
 require 'yaml'
 require 'json'
 require 'fileutils'
 
-#
-# This class generates mods.yml file, which is derived from mcmod.info/litemod.json. 
-#
+
 class Config
-    
+
 # Constructor
         def initialize( modsPath = "./mods/", configPath = "./config/", configFile = "mods.yml" )
            @modsPath = modsPath
@@ -33,13 +26,14 @@ class Config
         end
         
 # Adds mods to config file
-        def append( filename = "", modslug = "", version = "" )
+        def append( filename = "", modslug = "", gameversion = "", version = "" )
             fileAppend = File.new( @configPath + @configFile, 'a' ) #r+
             fileRead = File.new( @configPath + @configFile, 'r' ) 
             
             entry = {
                 modslug => {
                         "version" => version,
+                        "gameversion" => gameversion,
                         "filename" => filename
                     }
                 }
@@ -61,7 +55,7 @@ class Config
         end
         
 # If mods.yml already has mod listed, update. If not, go to append method to populate that mod.
-        def update( filename = "", modslug = "", version = "" )
+        def update( filename = "", modslug = "", gameversion = "", version = "" )
             file = File.new( @configPath + @configFile, 'r+' )
             data = YAML.load( file )
             
@@ -72,6 +66,7 @@ class Config
             if ( ! File.zero? file )
                 if ( data.key?( modslug ) )
                     data[modslug]["filename"] = filename
+                    data[modslug]["gameversion"] = gameversion
                     data[modslug]["version"] = version
                     fileWrite = File.new( @configPath + @configFile, 'w' )
                     fileWrite.write ( data.to_yaml )
@@ -82,7 +77,7 @@ class Config
             end
 
             file.close()
-            append( filename, modslug, version )
+            append( filename, modslug, gameversion, version )
         end
         
 # Get information from mcmod.info and litemod.json and pass that information to update method, which will pass to append method if necessary.
@@ -92,6 +87,7 @@ class Config
 # Initalize variables
             modslug = ""
             version = ""
+            gameversion = ""
             filename = ""
             found = false
             
@@ -109,6 +105,7 @@ class Config
                             begin
                                 json = JSON.parse( info )[ 0 ]
                                 modslug = json['modid']
+                                gameversion = json['mcversion']
                                 version = json['version']
                                 found = true
                                 zip_file.close()
@@ -131,7 +128,8 @@ class Config
                             
                             json = JSON.parse( info )
                             modslug = json['name']
-                            version = json['mcversion'] + "-" + json['version']
+                            version = json['version']
+                            gameversion = json['mcversion']
                         end
                     end
                 end
@@ -141,10 +139,11 @@ class Config
 # If the loop above was not able to obtain information automatically, default back to filename.
                 if ( found == false )
                     modslug = current
-                    version = "N/A"
+                    gameversion = "NotKnown"
+                    version = "NotKnown"
                 end
 
-                update( filename, modslug.downcase, version )
+                update( filename, modslug.downcase, gameversion, version )
             end
         end
 end
@@ -167,16 +166,14 @@ class Solder
     def populate_folders
         configFile = File.new( @configPath + @configFile, 'r' )
         configHash = YAML.load( configFile )
-        
         if ( ! File.zero? configFile )
             configHash.each do | key, value |
-                directory = @outputPath + key + "/" + "mods"
+                directory = @outputPath + key + "/" + configHash[key]["gameversion"]
                 puts directory
                 FileUtils.mkdir_p( directory )
             end
         end
-    end
-    
+        end
 # Create a copy of mods in the mods folder, to the directory we've just created.
     def populate_mods
         configFile = File.new( @configPath + @configFile, 'r' )
@@ -185,46 +182,13 @@ class Solder
         if ( ! File.zero? configFile )
             configHash.each do | key, value |
                 file = @modsPath + configHash[key]["filename"]
-                destination = @outputPath + key + "/" + "mods" + "/"
+                destination = @outputPath + key + "/" + configHash[key]["gameversion"]
 
                 if ( ! File.exist? destination + configHash[key]["filename"] )
                     FileUtils.cp( file, destination )
                 end
             end
         end
-    end
-    
-# Create an archive (.zip) that includes mods folder and mod itself.
-    def populate_zips
-        configFile = File.new( @configPath + @configFile, 'r' )
-        configHash = YAML.load( configFile )
-        
-        if ( ! File.zero? configFile )
-            configHash.each do | key, value |
-                zipFile = @outputPath.to_s + key.to_s + "/" + key.to_s + "-" + configHash[key]["version"].to_s + ".zip"
-                path = @outputPath + key + "/" + "mods" + "/"
-                File.delete( zipFile ) if File.exists?( zipFile )
-                Zip::File.open( zipFile, Zip::File::CREATE ) do | zip_file |
-                    zip_file.mkdir( "mods" )
-                    zip_file.add( "mods/" + configHash[key]["filename"], path + configHash[key]["filename"] )
-                    zip_file.close()
-                end
-            end
-        end
-    end
-
-# For now, this only gets rid of mods folder and mod itself.
-    def cleanup
-        configFile = File.new( @configPath + @configFile, 'r' )
-        configHash = YAML.load( configFile )
-        
-        if ( ! File.zero? configFile )
-            configHash.each do | key, value |
-                path = @outputPath + key + "/" + "mods" + "/"
-                FileUtils.rm_rf( path )
-            end
-        end
-
     end
 end
 
@@ -247,5 +211,3 @@ answer = gets.chomp!
 action = Solder.new()
 action.populate_folders()
 action.populate_mods()
-action.populate_zips()
-action.cleanup()
